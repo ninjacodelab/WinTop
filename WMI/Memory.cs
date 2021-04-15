@@ -5,12 +5,14 @@ namespace WinTop.WMI
 {
     class Memory
     {
-        public decimal PctUsed { get; set; }
+        public decimal PercentageUsed { get; set; }
         public ulong TotalKb { get; set; }
+        public double TotalMb => TotalKb / 1024.0;
+        public double TotalGb => TotalMb / 1024.0;
         public int NumOfProcesses { get; set; }
         public DateTime LastBootTime { get; set; }
 
-        public void GetInfo(ManagementScope scope)
+        public Memory(ManagementScope scope)
         {
             ObjectQuery osQuery = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, osQuery);
@@ -23,7 +25,7 @@ namespace WinTop.WMI
                 decimal pctFreeRam = Math.Round((decimal)freeRamInKb / totalRamInKb * 100, 1);
                 decimal pctUsedRam = 100 - pctFreeRam;
 
-                PctUsed = pctUsedRam;
+                PercentageUsed = pctUsedRam;
                 TotalKb = totalRamInKb;
                 NumOfProcesses = Convert.ToInt32(m["NumberOfProcesses"]);
                 LastBootTime = ManagementDateTimeConverter.ToDateTime(m["LastBootUpTime"].ToString());

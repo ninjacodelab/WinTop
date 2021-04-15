@@ -5,20 +5,22 @@ namespace WinTop.WMI
 {
     class Processor
     {
-        public static string GetInfo(ManagementScope scope)
+        public static void GetInfo(ManagementScope scope, out string name, out int numOfCores)
         {
             ObjectQuery cpuQuery = new ObjectQuery("SELECT * FROM Win32_Processor");
             ManagementObjectSearcher cpuSearcher = new ManagementObjectSearcher(scope, cpuQuery);
             ManagementObjectCollection cpuCollection = cpuSearcher.Get();
 
             string cpuInfo = string.Empty;
+            name = string.Empty;
+            numOfCores = 0;
 
             foreach (var c in cpuCollection)
             {
-                cpuInfo = $"Name: {c["Name"]} ({c["NumberOfCores"]} Cores)";
+                //cpuInfo = $"Name: {c["Name"]} ({c["NumberOfCores"]} Cores)";
+                name = Convert.ToString(c["Name"]);
+                numOfCores = Convert.ToInt16(c["NumberOfCores"]);
             }
-
-            return cpuInfo;
         }
 
         public static decimal GetUtilization(ManagementScope scope)

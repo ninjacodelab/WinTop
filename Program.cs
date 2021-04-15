@@ -27,47 +27,30 @@ namespace WinTop
         // TODO: Refactor
         private static void GetAndDisplayProcessInformation(ManagementScope scope)
         {
+            // Get console dimensions
             int height = Console.WindowHeight;
             int width = Console.WindowWidth;
-
-            Console.SetCursorPosition(width - 1, height - 1);
-            Console.Write("X");
 
             //Console.CursorVisible = false;
             Console.SetCursorPosition(0, 0);
             Console.WriteLine();
 
             // Processor
-            var cpuInfo = Processor.GetInfo(scope);
+            var cpuName = string.Empty;
+            var numOfCores = 0;
+            Processor.GetInfo(scope, out cpuName, out numOfCores);
             var cpuUtilization = Processor.GetUtilization(scope);
 
             // Memory
-            Memory memory = new Memory();
-            memory.GetInfo(scope);
-            Console.WriteLine($"  CPU{Helper.DisplayAsBarGraph(cpuUtilization)}  {cpuInfo}  Tasks: {memory.NumOfProcesses} total");
-            Console.WriteLine($"  Mem{Helper.DisplayAsBarGraph(memory.PctUsed)}  Size: {memory.TotalKb / OneMb:F1} GB");
+            Memory memory = new Memory(scope);
+            Helper.DisplayCpuInformation(cpuUtilization, cpuName, numOfCores, memory.NumOfProcesses);
+            Helper.DisplayMemoryInformation(memory);
 
             // Paging space
-            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_PageFileUsage");
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-            ManagementObjectCollection collection = searcher.Get();
+            PageFile pageFile = new PageFile(scope);
+            Helper.DisplayPagingInformation(pageFile, memory);
 
-            string info = string.Empty;
-            uint totalSize = 0;
-            uint currentUsage = 0;
-
-            foreach (var item in collection)
-            {
-                info = $"Total: {item["AllocatedBaseSize"]} Current: {item["CurrentUsage"]} Peak: {item["PeakUsage"]})";
-                totalSize = (uint) item["AllocatedBaseSize"];
-                currentUsage = (uint) item["CurrentUsage"];
-            }
-
-            decimal pagefilePctUsed = (decimal)currentUsage / totalSize * 100;
-
-            TimeSpan upTime = DateTime.Now - memory.LastBootTime;
-            Console.WriteLine($"  Pge{Helper.DisplayAsBarGraph(pagefilePctUsed)}  Uptime: {upTime:dd\\.hh\\:mm\\:ss}");
-
+            // Add a blank line between cpu/memory/paging section and the process section
             Console.WriteLine();
 
             // List of processes
