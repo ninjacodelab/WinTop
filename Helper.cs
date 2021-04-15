@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using WinTop.WMI;
 
@@ -15,6 +17,21 @@ namespace WinTop
             sb.Append(columnHeaders);
             sb.Append(' ', consoleWidth - columnHeaders.Length - 1);
             Console.WriteLine(sb.ToString());
+            // Cleanup
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+
+        public static void DisplayProcessGroupHeader(int consoleWidth)
+        {
+            Console.BackgroundColor = ConsoleColor.DarkGreen;
+            Console.ForegroundColor = ConsoleColor.Black;
+            string columnHeaders = "  MEMORY USED   PROCESS GROUP";
+            StringBuilder sb = new StringBuilder();
+            sb.Append(columnHeaders);
+            sb.Append(' ', consoleWidth - columnHeaders.Length - 1);
+            Console.WriteLine(sb.ToString());
+            // Cleanup
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
         }
@@ -125,6 +142,29 @@ namespace WinTop
 
             // Cleanup
             Console.SetCursorPosition(0, rowPosition + 1);
+        }
+
+        public static void DisplayProcessList(List<ProcessInfo> processList, int consoleHeight, int consoleWidth)
+        {
+            Helper.DisplayProcessListHeader(consoleWidth);
+
+            var topProcesses = processList.Select(x => x).OrderBy(x => x.RamUsed).Reverse().Take(consoleHeight - 7);
+            foreach (var process in topProcesses)
+            {
+                Console.WriteLine($"{process.Pid,8}{process.Priority,5}{process.RamUsedMb,10:F1} MB" +
+                                  $"{process.ThreadCount,7}{process.ProcessorUsed,15}  {process.Name,-40}");
+            }
+
+        }
+
+        public static void DisplayProcessesByGroups(List<ProcessGroupInfo> processGroups, int consoleHeight, int consoleWidth)
+        {
+            Helper.DisplayProcessGroupHeader(consoleWidth);
+
+            foreach (var processGroup in processGroups.OrderBy(x => x.TotalRamUsed).Reverse().Take(consoleHeight - 7))
+            {
+                Console.WriteLine($"{processGroup.TotalRamUsedMb,10} MB   {processGroup.Name,-50}");
+            }
         }
 
         public static string FormatAsPercentage(decimal decimalInput)

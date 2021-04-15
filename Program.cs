@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management;
 using System.Threading;
 using WinTop.WMI;
@@ -9,8 +8,6 @@ namespace WinTop
 {
     class Program
     {
-        private const double OneMb = 1048576.0;
-
         static void Main(string[] args)
         {
             ManagementScope scope = new ManagementScope("\\\\.\\root\\cimv2");
@@ -53,22 +50,13 @@ namespace WinTop
             // Add a blank line between cpu/memory/paging section and the process section
             Console.WriteLine();
 
-            // List of processes
-            Helper.DisplayProcessListHeader(width);
-            List<ProcessInfo> processList = WMI.Process.GetAll(scope);
-            var topProcesses = processList.Select(x => x).OrderBy(x => x.RamUsed).Reverse().Take(height - 7);
-            foreach (var process in topProcesses)
-            {
-                Console.WriteLine($"{process.Pid,8}{process.Priority,5}{process.RamUsedMb,10:F1} MB" +
-                                  $"{process.ThreadCount,7}{process.ProcessorUsed,15}  {process.Name,-40}");
-            }
+            // List of single processes
+            List<ProcessInfo> processList = Process.GetAll(scope);
+            //Helper.DisplayProcessList(processList, height, width);
 
-            //List<ProcessGroupInfo> processGroups = Process.GetProcessGroups(scope, processList);
-
-            //foreach (var processGroup in processGroups.OrderBy(x => x.TotalRamUsed).Reverse().Take(height - 7))
-            //{
-            //    Console.WriteLine($"{processGroup.Name,40}{processGroup.TotalRamUsedMb,16} MB");
-            //}
+            // List of grouped processes
+            List<ProcessGroupInfo> processGroups = Process.GetProcessGroups(scope, processList);
+            Helper.DisplayProcessesByGroups(processGroups, height, width);
         }
     }
 }

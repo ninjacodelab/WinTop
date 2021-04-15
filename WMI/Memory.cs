@@ -8,7 +8,7 @@ namespace WinTop.WMI
         public decimal PercentageUsed { get; set; }
         public ulong TotalKb { get; set; }
         public double TotalMb => TotalKb / 1024.0;
-        public double TotalGb => TotalMb / 1024.0;
+        public double TotalGb => TotalKb / 1048576.0;
         public int NumOfProcesses { get; set; }
         public DateTime LastBootTime { get; set; }
 
