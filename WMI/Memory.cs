@@ -8,6 +8,7 @@ namespace WinTop.WMI
         public decimal PctUsed { get; set; }
         public ulong TotalKb { get; set; }
         public int NumOfProcesses { get; set; }
+        public DateTime LastBootTime { get; set; }
 
         public void GetInfo(ManagementScope scope)
         {
@@ -25,6 +26,7 @@ namespace WinTop.WMI
                 PctUsed = pctUsedRam;
                 TotalKb = totalRamInKb;
                 NumOfProcesses = Convert.ToInt32(m["NumberOfProcesses"]);
+                LastBootTime = ManagementDateTimeConverter.ToDateTime(m["LastBootUpTime"].ToString());
             }
         }
     }

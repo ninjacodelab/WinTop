@@ -50,6 +50,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WMI\Memory.cs" />
+    <Compile Include="WMI\PageFile.cs" />
     <Compile Include="WMI\Process.cs" />
     <Compile Include="WMI\Processor.cs" />
   </ItemGroup>

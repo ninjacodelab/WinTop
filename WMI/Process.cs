@@ -30,5 +30,16 @@ namespace WinTop.WMI
 
             return processList;
         }
+
+        public static List<ProcessGroupInfo> GetProcessGroups(ManagementScope scope, List<ProcessInfo> processList)
+        {
+            return processList
+                .GroupBy(process => process.Name)
+                .Select(group => new ProcessGroupInfo
+                {
+                    Name = group.First().Name,
+                    TotalRamUsed = group.Aggregate(0UL, (a, t) => a + t.RamUsed)
+                }).ToList();
+        }
     }
 }

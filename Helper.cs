@@ -9,6 +9,7 @@ namespace WinTop
         public static string DisplayAsBarGraph(decimal percentageUsed)
         {
             int barLength = (int)percentageUsed / 5;
+            if (barLength < 0) barLength = 0;
             var sb = new StringBuilder();
             sb.Append('[');
             sb.Append('|', barLength);
@@ -20,13 +21,17 @@ namespace WinTop
             return sb.ToString();
         }
 
-        public static void DisplayProcessListHeader()
+        public static void DisplayProcessListHeader(int consoleWidth)
         {
             Console.BackgroundColor = ConsoleColor.DarkGreen;
             Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine($"      ID  PRI          MEM   THRD           TIME  COMMAND                                                ");
+            string columnHeaders = "      ID  PRI          MEM   THRD           TIME  COMMAND";
+            StringBuilder sb = new StringBuilder();
+            sb.Append(columnHeaders);
+            sb.Append(' ', consoleWidth - columnHeaders.Length - 1);
+            Console.WriteLine(sb.ToString());
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Gray;
         }
 
         public static TimeSpan GetProcessorUsage(ulong kernelModeTime, ulong userModeTime)
