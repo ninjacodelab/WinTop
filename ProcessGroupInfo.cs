@@ -6,5 +6,6 @@
         public ulong TotalRamUsed { get; set; }
         public ulong TotalRamUsedKb => TotalRamUsed / 1024;
         public ulong TotalRamUsedMb => TotalRamUsedKb / 1024;
+        public int NumProcesses { get; set; }
     }
 }

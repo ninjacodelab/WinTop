@@ -35,10 +35,14 @@ namespace WinTop
 
         public static void ShowUsageHints(int height, int width)
         {
-            string hints = "V: toggle group view | X: exit";
-            Console.BackgroundColor = ConsoleColor.DarkGray;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.SetCursorPosition(width - hints.Length - 1, height - 1);
+            string hints = "S: toggle stats | V: toggle group view | X: exit";
+            //Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            int left = width - hints.Length - 1;
+            int top = height - 1;
+            if (left < 0) left = 0;
+            if (top < 0) top = 0;
+            Console.SetCursorPosition(left, top);
             Console.Write(hints);
             Console.BackgroundColor = ConsoleColor.Black;
         }

@@ -41,7 +41,8 @@ namespace WinTop.WMI
                 .Select(group => new ProcessGroupInfo
                 {
                     Name = group.First().Name,
-                    TotalRamUsed = group.Aggregate(0UL, (a, t) => a + t.RamUsed)
+                    TotalRamUsed = group.Aggregate(0UL, (a, t) => a + t.RamUsed),
+                    NumProcesses = group.Count()
                 }).ToList();
         }
 
@@ -62,9 +63,16 @@ namespace WinTop.WMI
             DisplayProcessGroupHeader(consoleWidth);
             ProcessGroups = GetProcessGroups();
 
+            // 71 equals the width of the first three columns on the row (at the time this was written)
+            int repeatCount = consoleWidth - 71;
+            if (repeatCount < 0) repeatCount = 0;
+            StringBuilder padding = new StringBuilder();
+            padding.Append(' ', repeatCount);
+
             foreach (var processGroup in ProcessGroups.OrderBy(x => x.TotalRamUsed).Reverse().Take(consoleHeight - 7))
             {
-                Console.WriteLine($"{processGroup.TotalRamUsedMb,10} MB   {processGroup.Name,-50}");
+                Console.WriteLine($"{processGroup.TotalRamUsedMb,10} MB   {processGroup.Name,-50} " +
+                                  $"{processGroup.NumProcesses,3}{padding}");
             }
         }
 
@@ -86,7 +94,7 @@ namespace WinTop.WMI
         {
             Console.BackgroundColor = ConsoleColor.DarkGreen;
             Console.ForegroundColor = ConsoleColor.Black;
-            string columnHeaders = "  MEMORY USED   PROCESS GROUP";
+            string columnHeaders = "          MEM   GROUP                                   PROCS IN GROUP";
             StringBuilder sb = new StringBuilder();
             sb.Append(columnHeaders);
             sb.Append(' ', consoleWidth - columnHeaders.Length - 1);

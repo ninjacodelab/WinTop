@@ -9,27 +9,39 @@ namespace WinTop
 {
     class Program
     {
+        public static Processor Processor;
+
         static void Main(string[] args)
         {
             ManagementScope scope = new ManagementScope("\\\\.\\root\\cimv2");
             scope.Connect();
-            Console.Clear();
+            Processor = new Processor(scope);
             bool runAgain = true;
             bool displayProcessesAsGroup = false;
+            bool showStats = false;
 
-            ConsoleKeyInfo keyInfo;
+            Console.CursorVisible = false;
+            Console.Clear();
+
             do
             {
-                GetAndDisplayProcessInformation(scope, displayProcessesAsGroup);
-                Thread.Sleep(2000);
-                keyInfo = Console.ReadKey(true);
-                runAgain = ProcessInput(keyInfo.Key, ref displayProcessesAsGroup);
+                GetAndDisplayProcessInformation(scope, displayProcessesAsGroup, showStats);
+                if (Console.KeyAvailable == false)
+                {
+                    Thread.Sleep(1000);
+                }
+                else
+                {
+                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                    runAgain = ProcessInput(keyInfo.Key, ref displayProcessesAsGroup, ref showStats);
+                }
             } while (runAgain);
         }
 
         // TODO: Refactor
-        private static void GetAndDisplayProcessInformation(ManagementScope scope, bool displayProcessesAsGroup)
+        private static void GetAndDisplayProcessInformation(ManagementScope scope, bool displayProcessesAsGroup, bool showStats)
         {
+            // TODO: Keep?
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -37,17 +49,13 @@ namespace WinTop
             int height = Console.WindowHeight;
             int width = Console.WindowWidth;
 
-            Console.CursorVisible = false;
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine();
-
             // Get data from WMI
-            Processor processor = new Processor(scope);
             Memory memory = new Memory(scope);
             PageFile pageFile = new PageFile(scope);
 
             // Write information gathered so far to the console
-            processor.WriteToConsole(scope, 1, memory.NumOfProcesses);
+            Console.SetCursorPosition(0, 0);
+            Processor.WriteToConsole(scope, 1, memory.NumOfProcesses);
             memory.WriteToConsole(2);
             pageFile.WriteToConsole(memory.LastBootTime, 3);
             Console.WriteLine();
@@ -64,13 +72,22 @@ namespace WinTop
             // Show usage hints
             Helper.ShowUsageHints(height, width);
 
-            Console.SetCursorPosition(2, height - 1);
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.Write($"{stopwatch.ElapsedMilliseconds.ToString()} ms");
-            Console.ForegroundColor = ConsoleColor.Gray;
+            // Show statistics
+            if (showStats)
+            {
+                Console.SetCursorPosition(2, height - 1);
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                Console.Write($"{stopwatch.ElapsedMilliseconds.ToString()} ms | X: {width} | Y: {height}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
+            else
+            {
+                Console.SetCursorPosition(2, height - 1);
+                Console.Write($"                             ");
+            }
         }
 
-        private static bool ProcessInput(ConsoleKey key, ref bool group)
+        private static bool ProcessInput(ConsoleKey key, ref bool group, ref bool stats)
         {
             switch (key)
             {
@@ -78,7 +95,10 @@ namespace WinTop
                     Helper.PrepareConsoleForExit();
                     return false;
                 case ConsoleKey.V:
-                    @group = !@group;
+                    group = !group;
+                    break;
+                case ConsoleKey.S:
+                    stats = !stats;
                     break;
             }
 
