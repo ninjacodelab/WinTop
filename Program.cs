@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Management;
 using System.Threading;
 using WinTop.WMI;
+using Process = WinTop.WMI.Process;
 
 namespace WinTop
 {
@@ -13,50 +14,75 @@ namespace WinTop
             ManagementScope scope = new ManagementScope("\\\\.\\root\\cimv2");
             scope.Connect();
             Console.Clear();
+            bool runAgain = true;
+            bool displayProcessesAsGroup = false;
 
+            ConsoleKeyInfo keyInfo;
             do
             {
-                GetAndDisplayProcessInformation(scope);
+                GetAndDisplayProcessInformation(scope, displayProcessesAsGroup);
                 Thread.Sleep(2000);
-            } while (true);//Console.ReadKey(true).Key != ConsoleKey.X);
+                keyInfo = Console.ReadKey(true);
+                runAgain = ProcessInput(keyInfo.Key, ref displayProcessesAsGroup);
+            } while (runAgain);
         }
 
         // TODO: Refactor
-        private static void GetAndDisplayProcessInformation(ManagementScope scope)
+        private static void GetAndDisplayProcessInformation(ManagementScope scope, bool displayProcessesAsGroup)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             // Get console dimensions
             int height = Console.WindowHeight;
             int width = Console.WindowWidth;
 
-            //Console.CursorVisible = false;
+            Console.CursorVisible = false;
             Console.SetCursorPosition(0, 0);
             Console.WriteLine();
 
-            // Processor
-            var cpuName = string.Empty;
-            var numOfCores = 0;
-            Processor.GetInfo(scope, out cpuName, out numOfCores);
-            var cpuUtilization = Processor.GetUtilization(scope);
-
-            // Memory
+            // Get data from WMI
+            Processor processor = new Processor(scope);
             Memory memory = new Memory(scope);
-            Helper.DisplayCpuInformation(cpuUtilization, cpuName, numOfCores, memory.NumOfProcesses);
-            Helper.DisplayMemoryInformation(memory);
-
-            // Paging space
             PageFile pageFile = new PageFile(scope);
-            Helper.DisplayPagingInformation(pageFile, memory);
 
-            // Add a blank line between cpu/memory/paging section and the process section
+            // Write information gathered so far to the console
+            processor.WriteToConsole(scope, 1, memory.NumOfProcesses);
+            memory.WriteToConsole(2);
+            pageFile.WriteToConsole(memory.LastBootTime, 3);
             Console.WriteLine();
 
-            // List of single processes
-            List<ProcessInfo> processList = Process.GetAll(scope);
-            //Helper.DisplayProcessList(processList, height, width);
+            // Get process data from WMI
+            Process process = new Process(scope);
 
-            // List of grouped processes
-            List<ProcessGroupInfo> processGroups = Process.GetProcessGroups(scope, processList);
-            Helper.DisplayProcessesByGroups(processGroups, height, width);
+            // Write process information to the console
+            if (displayProcessesAsGroup)
+                process.WriteToConsoleAsGroups(height, width);
+            else
+                process.WriteToConsoleAsList(height, width);
+
+            // Show usage hints
+            Helper.ShowUsageHints(height, width);
+
+            Console.SetCursorPosition(2, height - 1);
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write($"{stopwatch.ElapsedMilliseconds.ToString()} ms");
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+
+        private static bool ProcessInput(ConsoleKey key, ref bool group)
+        {
+            switch (key)
+            {
+                case ConsoleKey.X:
+                    Helper.PrepareConsoleForExit();
+                    return false;
+                case ConsoleKey.V:
+                    @group = !@group;
+                    break;
+            }
+
+            return true;
         }
     }
 }
